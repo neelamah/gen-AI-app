@@ -1,10 +1,8 @@
 # https://github.com/campusx-official/langgraph-tutorials/blob/main/7_review_reply_workflow.ipynb
 # this is simple chatbot example.
 # Issue:- it is not remebering  previous conevrsion. it is only responding to current user query.
-# To make it remember previous conversation we need to store all conversation in any store like In database, use InMerory storage, session state.
-#Persistent storage:-  We will use persistent storage concept to store all conversation.
-#Checkpointer:- it is a concept which store state of graph at any point of time. so we can use checkpointer to store all conversation in state and when we execute graph we will pass initial state with user query in messages and get response from model. and when we execute graph next time we will pass previous state with new user query in messages and get response from model. so it will remember all conversation.
-#thead Id:- it will create thread for each  conversation. (like if i start a chat and end id it , it will have a thread id , now  new chat ,it will create other thread id ofr new chat)
+# To make it remember previous conversation we need to store all conversation in any store. 
+# like In database, use InMerory storage, session state, use checkpointer , Thread Id.
 
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_core.output_parsers.json import JsonOutputParser
