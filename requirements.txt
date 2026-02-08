@@ -1,0 +1,9 @@
+# Python 3.11 (important!)
+# %pip install streamlit
+# %pip install langgraph
+# %pip install langchain
+# %pip install langchain-huggingface
+# %pip install transformers
+# pip install torch
+# %pip install sentencepiece faiss-cpu
+

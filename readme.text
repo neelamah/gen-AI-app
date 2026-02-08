@@ -1,0 +1,103 @@
+Prompt Type:-
+
+1. Single Message
+
+1️⃣ PromptTemplate (most basic)
+  Used when you have fixed text + variables.
+
+  when to use :-
+  Use when: Single input ,Static structure , No chat history
+  
+syntex:- 
+from langchain.prompts import PromptTemplate
+prompt = PromptTemplate(
+    template="Explain {topic} in simple words",
+    input_variables=["topic"]
+)
+
+2. Multi-Message
+
+2️⃣ ChatPromptTemplate (most common for chatbots)
+Designed for chat models (system / human / AI roles).
+
+Use when: Building chatbots ,orking with OpenAI / HF chat models, Need role separation
+
+syntex:- 
+from langchain.prompts import ChatPromptTemplate
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant"),
+    ("human", "{question}")
+])
+
+
+
+3️⃣ SystemMessagePromptTemplate
+Controls behavior & personality of the model.
+
+Use when: You want consistent tone ,Safety rules, Role definition
+
+syntex:- 
+from langchain.prompts import SystemMessagePromptTemplate
+system_prompt = SystemMessagePromptTemplate.from_template(
+    "You are an expert ML interviewer"
+)
+
+
+4️⃣ HumanMessagePromptTemplate
+Represents user input.
+
+Use when: Mapping raw user text, Chat flows
+
+syntex:-
+from langchain.prompts import HumanMessagePromptTemplate
+human_prompt = HumanMessagePromptTemplate.from_template(
+    "{user_input}"
+)
+
+5️⃣ AIMessagePromptTemplate
+Used to inject example responses (few-shot learning).
+
+Use when: Few-shot prompting, Teaching response style
+
+from langchain.prompts import AIMessagePromptTemplate
+ai_prompt = AIMessagePromptTemplate.from_template(
+    "Sure! Here's the answer..."
+)
+
+6️⃣ FewShotPromptTemplate
+Used when examples help the model learn the pattern.
+
+Use when: Structured output, Interview Q&A, Classification tasks
+
+from langchain.prompts import FewShotPromptTemplate, PromptTemplate
+
+example_prompt = PromptTemplate(
+    input_variables=["q", "a"],
+    template="Q: {q}\nA: {a}"
+)
+
+few_shot = FewShotPromptTemplate(
+    examples=[
+        {"q": "What is ML?", "a": "ML is..."},
+        {"q": "What is DL?", "a": "DL is..."}
+    ],
+    example_prompt=example_prompt,
+    suffix="Q: {question}\nA:",
+    input_variables=["question"]
+)
+
+
+7️⃣ MessagesPlaceholder (for memory)
+Used to inject chat history.
+
+Use when: Conversation memory, Long chats, RAG chatbots
+
+syntex:-
+from langchain.prompts import MessagesPlaceholder
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant"),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("human", "{question}")
+])
+
+
