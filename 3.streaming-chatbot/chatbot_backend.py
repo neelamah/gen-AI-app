@@ -102,6 +102,8 @@ initial_state = {
 #When you call model.invoke() again with the same thread_id, the checkpointer loads the previous state automatically. and with new query will pass to LLM.
 #when ever we invoke llm need to pass thread-id.
 config = {'configurable': {'thread_id': '1'}}  # You can generate a unique thread_id for each conversation.
+
+#excute simple flow to check in backend.
 result = chatbot.invoke(initial_state, config=config)['messages'][-1].content
 
 
@@ -119,3 +121,11 @@ result = chatbot.invoke(initial_state, config=config)['messages'][-1].content
 #     print(chatbot.get_state(config))  
 #     #check intermediate state history after execution of graph.( on every super node(checkpointer) what state was stored). It will show for every step.
 #     print(list(chatbot.get_state_history(config)))
+
+
+#apply streaming in llm respponse to check in backaend
+# for message_chunk, metadata in chatbot.stream(initial_state, config=config, stream_mode='messages'):
+#     if message_chunk.content:
+#         print(message_chunk.content, end='', flush=True)  # Print the content as it arrives without adding a new line
+    
+    
