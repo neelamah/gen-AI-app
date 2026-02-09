@@ -1,46 +1,25 @@
 # https://github.com/campusx-official/langgraph-tutorials/blob/main/7_review_reply_workflow.ipynb
 
-#Tools
-# In LangGraph, tools are external functions or APIs that an LLM can call to perform actions like calculations, data access, or API calls, enabling the agent to act beyond text generation.
+#RAG
+ #RAG is a technique where a language model (like GPT) generates responses by combining its own generative capabilities with information retrieved from external sources, such as documents, databases, or knowledge bases.
+ 
+ #Key points:
+#1.Retrieval: The system searches for relevant information from a vector store, database, or documents based on the user query.
+#2.Augmentation: The retrieved information is provided as context to the language model.
+#3.Generation: The language model generates a response that uses both its internal knowledge and the retrieved context.
 
-#1. tool_node :- “ToolNode in LangGraph is a graph node responsible for executing tools when the LLM requests a tool call and returning the tool output back into the graph state.”
-#2. tools_condition :- “tools_condition is a routing condition in LangGraph that checks whether the LLM response contains a tool call and directs execution to the ToolNode if required.”
-#3. Register tools:-  Need to  register tool with LLM.
+#In LangChain terms:
+#1.You typically use a Retriever (like FAISS or Chroma) to fetch relevant documents.
+#2.Then pass those documents to a LLMChain or RAGChain to generate an informed response.
 
-#Benifit of tools:-
-#Tools let your agent:
-#1.Call APIs
-#2.Query databases
-#3.Run Python logic
-#4.Search the web
-#5.Perform calculations
-#6.Interact with files
-
-#Some common tools:--
-#1.search_tool → search the web
-#2.calculator → math
-#3.sql_tool → database queries
-#4.file_tool → read/write files
-#5.api_tool → REST APIs
-#6.python_tool → data processing
-
-#steps to follow to use tools:-
-#1. Define the tool:- Create a callable function (custom or LangChain tool) with a clear schema.
-    #Register the tool with the LLM Bind the tool so the LLM knows when and how to call it.
-#2. Create a ToolNode:- Add the tool(s) to a ToolNode for execution inside the graph.
-#3.Design the graph flow:-  Connect the LLM node and ToolNode using edges and conditions. 
-#4. Enable tool invocation: Let the LLM decide when to call a tool based on user input.
-     #( Note:- LLm will return tool Name , which tool need to execute, will not execute tool here.)
-
-#5. Execute the tool:-  LangGraph routes the request to the ToolNode and runs the tool.
-#6. Return tool output to the LLM:- The result is added to the graph state.
-#7. Generate the final response: The LLM uses the tool output to respond or continue the workflow.
+#User Query → Retriever fetches relevant docs → pass (context(retrived by retriver) + query) to LLM generates response using docs → Response to user
 
 
-#One-liner (interview version)
-
-#“To use tools in LangGraph, we define and register tools, add them to a ToolNode, connect them in the graph, and let the LLM invoke them during execution.”
-
+#Why Rag:-
+#1. LLM outdated knowledge
+#2. privay:- data remain private.
+#3. Hallucinations:- By providing relevant retrieved context, RAG reduces the chance the LLM will make up answers.
+#Hallucinations occur when a language model generates information that is false, misleading, or not supported by the retrieved documents or real-world facts.
 
 
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
@@ -56,6 +35,10 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_community.tools import DuckDuckGoSearchRun 
 from langchain_core.tools import tool
 import requests
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 
 
 # -------------------------
@@ -71,7 +54,21 @@ llm = HuggingFaceEndpoint(
 # create model
 model = ChatHuggingFace(llm=llm)
 
+#load pdf
+loader = PyPDFLoader("intro-to-ml.pdf")
+docs = loader.load()
 
+#split document using spliter
+splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+
+
+# create embadding
+embeddings = HuggingFaceEmbeddings(model='text-embedding-3-small')
+vector_store = FAISS.from_documents(chunks, embeddings)
+
+#create retriver
+retriever = vector_store.as_retriever(search_type='similarity', search_kwargs={'k':4})
 
 # -------------------------
 # STATE
@@ -130,11 +127,31 @@ def get_stock_price(symbol: str) -> dict:
     r = requests.get(url)
     return r.json()
 
+4. #Rag tool
+@tool
+def rag_tool(query):
+
+    """
+    Retrieve relevant information from the pdf document.
+    Use this tool when the user asks factual / conceptual questions
+    that might be answered from the stored documents.
+    """
+    result = retriever.invoke(query)
+
+    context = [doc.page_content for doc in result]
+    metadata = [doc.metadata for doc in result]
+
+    return {
+        'query': query,
+        'context': context,
+        'metadata': metadata
+    }
+
 #---------------------------End tool-----------------
 
 #----------------Register tool with LLM---------------
 #create list of tool want to register
-tools = [search_tool, get_stock_price, calculator]
+tools = [search_tool, get_stock_price, calculator, rag_tool]
 llm_with_tools = llm.bind_tools(tools)  #  In higging face bind method not working.
 
 
@@ -188,17 +205,6 @@ initial_state = {
 #When you call model.invoke() again with the same thread_id, the checkpointer loads the previous state automatically. and with new query will pass to LLM.
 #when ever we invoke llm need to pass thread-id.
 config = {'configurable': {'thread_id': '1'}}  # You can generate a unique thread_id for each conversation.
-
-
-# DuckDuckGo
-print(search_tool.invoke("latest AI news"))
-
-# Calculator
-print(calculator(first_num=5, second_num=3, operation="mul"))
-
-# Stock API
-print(get_stock_price("AAPL"))
-
 
 #excute simple flow to check in backend.
 result = chatbot.invoke(initial_state, config=config)['messages'][-1].content

@@ -188,18 +188,6 @@ initial_state = {
 #When you call model.invoke() again with the same thread_id, the checkpointer loads the previous state automatically. and with new query will pass to LLM.
 #when ever we invoke llm need to pass thread-id.
 config = {'configurable': {'thread_id': '1'}}  # You can generate a unique thread_id for each conversation.
-
-
-# DuckDuckGo
-print(search_tool.invoke("latest AI news"))
-
-# Calculator
-print(calculator(first_num=5, second_num=3, operation="mul"))
-
-# Stock API
-print(get_stock_price("AAPL"))
-
-
 #excute simple flow to check in backend.
 result = chatbot.invoke(initial_state, config=config)['messages'][-1].content
 
