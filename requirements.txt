@@ -8,4 +8,5 @@
 # %pip install sentencepiece faiss-cpu
 #pip install -U langchain langchain-community
 #pip install -U ddgs
+#pip install faiss-cpu
 
